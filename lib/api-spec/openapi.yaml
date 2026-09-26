@@ -1,0 +1,434 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: dashboard
+    description: Overview metrics and activity
+  - name: customers
+    description: Customer records
+  - name: quotes
+    description: Insurance quote workflow
+  - name: proposals
+    description: Proposal workflow
+  - name: policies
+    description: Issued policies
+  - name: claims
+    description: Claims workflow
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard summary
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+  /activity:
+    get:
+      operationId: getActivity
+      tags: [dashboard]
+      summary: Get recent activity
+      responses:
+        "200":
+          description: Recent activity
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Activity"
+  /customers:
+    get:
+      operationId: listCustomers
+      tags: [customers]
+      summary: List customers
+      responses:
+        "200":
+          description: Customer list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Customer"
+    post:
+      operationId: createCustomer
+      tags: [customers]
+      summary: Create a customer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomerInput"
+      responses:
+        "201":
+          description: Created customer
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Customer"
+  /quotes:
+    get:
+      operationId: listQuotes
+      tags: [quotes]
+      summary: List quotes
+      responses:
+        "200":
+          description: Quote list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Quote"
+    post:
+      operationId: createQuote
+      tags: [quotes]
+      summary: Create an insurance quote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuoteInput"
+      responses:
+        "201":
+          description: Created quote
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Quote"
+  /quotes/{id}:
+    get:
+      operationId: getQuote
+      tags: [quotes]
+      summary: Get a quote
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Quote
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Quote"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /proposals:
+    post:
+      operationId: createProposal
+      tags: [proposals]
+      summary: Submit a proposal from a quote
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProposalInput"
+      responses:
+        "201":
+          description: Created proposal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Proposal"
+  /policies:
+    get:
+      operationId: listPolicies
+      tags: [policies]
+      summary: List policies
+      responses:
+        "200":
+          description: Policy list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Policy"
+  /claims:
+    get:
+      operationId: listClaims
+      tags: [claims]
+      summary: List claims
+      responses:
+        "200":
+          description: Claim list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Claim"
+    post:
+      operationId: createClaim
+      tags: [claims]
+      summary: Register a claim
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClaimInput"
+      responses:
+        "201":
+          description: Created claim
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Claim"
+  /claims/{id}:
+    get:
+      operationId: getClaim
+      tags: [claims]
+      summary: Get a claim
+      parameters:
+        - $ref: "#/components/parameters/Id"
+      responses:
+        "200":
+          description: Claim
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Claim"
+        "404":
+          $ref: "#/components/responses/NotFound"
+components:
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+    DashboardSummary:
+      type: object
+      properties:
+        activePolicies:
+          type: integer
+        openClaims:
+          type: integer
+        renewalValue:
+          type: number
+        pendingActions:
+          type: integer
+        quoteConversion:
+          type: number
+      required: [activePolicies, openClaims, renewalValue, pendingActions, quoteConversion]
+    Activity:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        title:
+          type: string
+        description:
+          type: string
+        time:
+          type: string
+        status:
+          type: string
+      required: [id, type, title, description, time, status]
+    Customer:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        businessName:
+          type: string
+        type:
+          type: string
+        location:
+          type: string
+        policies:
+          type: integer
+        status:
+          type: string
+      required: [id, name, businessName, type, location, policies, status]
+    CustomerInput:
+      type: object
+      properties:
+        name:
+          type: string
+        businessName:
+          type: string
+        type:
+          type: string
+        location:
+          type: string
+      required: [name, businessName, type, location]
+    Quote:
+      type: object
+      properties:
+        id:
+          type: string
+        customerName:
+          type: string
+        businessName:
+          type: string
+        product:
+          type: string
+        insurer:
+          type: string
+        premium:
+          type: number
+        coverage:
+          type: number
+        status:
+          type: string
+        expiresAt:
+          type: string
+        createdAt:
+          type: string
+      required: [id, customerName, businessName, product, insurer, premium, coverage, status, expiresAt, createdAt]
+    QuoteInput:
+      type: object
+      properties:
+        customerName:
+          type: string
+        businessName:
+          type: string
+        location:
+          type: string
+        product:
+          type: string
+        coverage:
+          type: number
+      required: [customerName, businessName, location, product, coverage]
+    Proposal:
+      type: object
+      properties:
+        id:
+          type: string
+        quoteId:
+          type: string
+        customerName:
+          type: string
+        status:
+          type: string
+        createdAt:
+          type: string
+      required: [id, quoteId, customerName, status, createdAt]
+    ProposalInput:
+      type: object
+      properties:
+        quoteId:
+          type: string
+        customerName:
+          type: string
+      required: [quoteId, customerName]
+    Policy:
+      type: object
+      properties:
+        id:
+          type: string
+        policyNumber:
+          type: string
+        customerName:
+          type: string
+        businessName:
+          type: string
+        product:
+          type: string
+        insurer:
+          type: string
+        premium:
+          type: number
+        coverage:
+          type: number
+        status:
+          type: string
+        expiryDate:
+          type: string
+        riskType:
+          type: string
+      required: [id, policyNumber, customerName, businessName, product, insurer, premium, coverage, status, expiryDate, riskType]
+    Claim:
+      type: object
+      properties:
+        id:
+          type: string
+        claimNumber:
+          type: string
+        policyNumber:
+          type: string
+        customerName:
+          type: string
+        incident:
+          type: string
+        reportedAt:
+          type: string
+        amount:
+          type: number
+        status:
+          type: string
+        priority:
+          type: string
+        assignee:
+          type: string
+      required: [id, claimNumber, policyNumber, customerName, incident, reportedAt, amount, status, priority, assignee]
+    ClaimInput:
+      type: object
+      properties:
+        policyNumber:
+          type: string
+        customerName:
+          type: string
+        incident:
+          type: string
+        amount:
+          type: number
+      required: [policyNumber, customerName, incident, amount]
+
